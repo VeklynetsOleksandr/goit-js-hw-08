@@ -3,33 +3,35 @@ import throttle from 'lodash.throttle';
 const formRef = document.querySelector('.feedback-form');
 const STORAGE_KEY = 'feedback-form-state';
 
-formRef.addEventListener('input', throttle(validateForm, 500));
-formRef.addEventListener('submit', submitForm);
+initialForm();
 
-let dataBase = {};
+formRef.addEventListener('input', throttle(onInput, 500));
+formRef.addEventListener('submit', onSubmit);
 
-getDataBase();
-
-function submitForm(evt) {
-  evt.preventDefault();
-  console.log(dataBase);
-  evt.target.reset();
-  localStorage.removeItem(STORAGE_KEY);
+function onInput() {
+  const formData = new FormData(formRef);
+  let userForm = {};
+  formData.forEach((value, name) => (userForm[name] = value));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(userForm));
 }
 
-function validateForm(evt) {
-  dataBase[evt.target.name] = evt.target.value;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(dataBase));
-}
-
-function getDataBase() {
-  let savedLocalStorageValue = localStorage.getItem(STORAGE_KEY);
-
-  if (savedLocalStorageValue) {
-    savedLocalStorageValue = JSON.parse(savedLocalStorageValue);
-    Object.entries(savedLocalStorageValue).forEach(([name, value]) => {
-      dataBase[name] = value;
+function initialForm() {
+  let persistedForm = localStorage.getItem(STORAGE_KEY);
+  if (persistedForm) {
+    persistedForm = JSON.parse(persistedForm);
+    console.log(persistedForm);
+    Object.entries(persistedForm).forEach(([name, value]) => {
       formRef.elements[name].value = value;
     });
   }
+}
+
+function onSubmit(evt) {
+  evt.preventDefault();
+  localStorage.removeItem(STORAGE_KEY);
+  let userForm = {};
+  const formData = new FormData(formRef);
+  formData.forEach((value, name) => (userForm[name] = value));
+  console.log(userForm);
+  formRef.reset();
 }
